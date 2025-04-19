@@ -1,6 +1,13 @@
 # Go REST API
 
-# REST API Architecture Overview
+## Requirements
+
+- [Go 1.24](https://golang.org/dl/)
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [Task](https://taskfile.dev/)
+
+## REST API Architecture Overview
 
 ```mermaid
 flowchart
