@@ -1,0 +1,12 @@
+# The .dockerignore file excludes files from the container server process.
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
+
+# Exclude git history and configuration.
+.gitignore
+.git
+
+# Exclude documents
+README.md
+
+# Misc. configurations
+.golangci.yml
