@@ -1,3 +1,3 @@
 package main
 
-// Empty marker file.
+// Empty file to mark this as root package for tools to work.
