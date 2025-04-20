@@ -1,0 +1,17 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  build:
+    cmds:
+      - go build -o server cmd/server/main.go
+  test:
+    cmds:
+      - go test -v ./...
+  lint:
+    cmds:
+      - golangci-lint run ./...
+  run:
+    cmds:
+      - docker compose up --build
