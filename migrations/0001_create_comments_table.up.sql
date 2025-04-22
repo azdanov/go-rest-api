@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS comments (
 	id UUID NOT NULL PRIMARY KEY,
-	slug TEXT NOT NULL,
-	body TEXT NOT NULL,
-	author TEXT NOT NULL
+	slug TEXT,
+	body TEXT,
+	author TEXT
 );
