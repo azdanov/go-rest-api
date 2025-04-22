@@ -15,10 +15,10 @@ var (
 )
 
 type Comment struct {
-	ID     string
-	Slug   string
-	Body   string
-	Author string
+	ID     string `json:"id"`
+	Slug   string `json:"slug"`
+	Body   string `json:"body"`
+	Author string `json:"author"`
 }
 
 type Store interface {
@@ -52,6 +52,7 @@ func (s *Service) CreateComment(ctx context.Context, c Comment) (Comment, error)
 		log.Println(err)
 		return Comment{}, fmt.Errorf("failed to create comment: %w", err)
 	}
+
 	return c, nil
 }
 
@@ -65,8 +66,7 @@ func (s *Service) GetComment(ctx context.Context, id string) (Comment, error) {
 }
 
 func (s *Service) UpdateComment(ctx context.Context, c Comment) error {
-	err := s.Store.UpdateComment(ctx, c)
-	if err != nil {
+	if err := s.Store.UpdateComment(ctx, c); err != nil {
 		log.Println(err)
 		return fmt.Errorf("failed to update comment: %w", err)
 	}
@@ -74,8 +74,7 @@ func (s *Service) UpdateComment(ctx context.Context, c Comment) error {
 }
 
 func (s *Service) DeleteComment(ctx context.Context, id string) error {
-	err := s.Store.DeleteComment(ctx, id)
-	if err != nil {
+	if err := s.Store.DeleteComment(ctx, id); err != nil {
 		log.Println(err)
 		return fmt.Errorf("failed to delete comment: %w", err)
 	}

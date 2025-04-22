@@ -18,8 +18,6 @@ const (
 	shutdownTimeout = 15
 )
 
-type CommentService interface{}
-
 type Handler struct {
 	Router  *mux.Router
 	Service CommentService
@@ -47,9 +45,10 @@ func NewHandler(service CommentService) *Handler {
 }
 
 func (h *Handler) mapRoutes() {
-	h.Router.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, World! %s \n", r.Host)
-	})
+	h.Router.HandleFunc("/api/v1/comments", h.PostComment).Methods(http.MethodPost)
+	h.Router.HandleFunc("/api/v1/comments/{id}", h.GetComment).Methods(http.MethodGet)
+	h.Router.HandleFunc("/api/v1/comments/{id}", h.UpdateComment).Methods(http.MethodPut)
+	h.Router.HandleFunc("/api/v1/comments/{id}", h.DeleteComment).Methods(http.MethodDelete)
 }
 
 func (h *Handler) Serve() error {
