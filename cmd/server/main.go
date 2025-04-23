@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/azdanov/go-rest-api/internal/comment"
 	"github.com/azdanov/go-rest-api/internal/db"
@@ -11,10 +11,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func Run() error {
-	log.Println("running server...")
+func Run(logger *slog.Logger) error {
+	logger.Info("starting server")
 
-	db, err := db.NewDatabase()
+	db, err := db.NewDatabase(logger)
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
@@ -22,9 +22,9 @@ func Run() error {
 		return err
 	}
 
-	commentService := comment.NewService(db)
+	commentService := comment.NewService(db, logger)
 
-	httpHandler := transportHttp.NewHandler(commentService)
+	httpHandler := transportHttp.NewHandler(commentService, logger)
 	if err = httpHandler.Serve(); err != nil {
 		return fmt.Errorf("failed to start server: %w", err)
 	}
@@ -33,7 +33,9 @@ func Run() error {
 }
 
 func main() {
-	if err := Run(); err != nil {
-		log.Println("error running server:", err)
+	logger := slog.Default()
+
+	if err := Run(logger); err != nil {
+		logger.Error("failed to run server", slog.Any("error", err))
 	}
 }

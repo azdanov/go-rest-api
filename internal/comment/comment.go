@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -29,19 +29,21 @@ type Store interface {
 }
 
 type Service struct {
-	Store Store
+	Store  Store
+	logger *slog.Logger
 }
 
-func NewService(store Store) *Service {
+func NewService(store Store, logger *slog.Logger) *Service {
 	return &Service{
-		Store: store,
+		Store:  store,
+		logger: logger,
 	}
 }
 
 func (s *Service) CreateComment(ctx context.Context, c Comment) (Comment, error) {
 	uuid, err := uuid.NewV7()
 	if err != nil {
-		log.Println(err)
+		s.logger.ErrorContext(ctx, "failed to generate UUID", slog.Any("error", err))
 		return Comment{}, fmt.Errorf("failed to generate UUID: %w", err)
 	}
 
@@ -49,7 +51,7 @@ func (s *Service) CreateComment(ctx context.Context, c Comment) (Comment, error)
 
 	c, err = s.Store.CreateComment(ctx, c)
 	if err != nil {
-		log.Println(err)
+		s.logger.ErrorContext(ctx, "failed to create comment", slog.Any("error", err))
 		return Comment{}, fmt.Errorf("failed to create comment: %w", err)
 	}
 
@@ -59,7 +61,7 @@ func (s *Service) CreateComment(ctx context.Context, c Comment) (Comment, error)
 func (s *Service) GetComment(ctx context.Context, id string) (Comment, error) {
 	comment, err := s.Store.GetComment(ctx, id)
 	if err != nil {
-		log.Println(err)
+		s.logger.ErrorContext(ctx, "failed to get comment", slog.Any("error", err))
 		return Comment{}, ErrCommentNotFound
 	}
 	return comment, nil
@@ -67,7 +69,7 @@ func (s *Service) GetComment(ctx context.Context, id string) (Comment, error) {
 
 func (s *Service) UpdateComment(ctx context.Context, c Comment) error {
 	if err := s.Store.UpdateComment(ctx, c); err != nil {
-		log.Println(err)
+		s.logger.ErrorContext(ctx, "failed to update comment", slog.Any("error", err))
 		return fmt.Errorf("failed to update comment: %w", err)
 	}
 	return nil
@@ -75,7 +77,7 @@ func (s *Service) UpdateComment(ctx context.Context, c Comment) error {
 
 func (s *Service) DeleteComment(ctx context.Context, id string) error {
 	if err := s.Store.DeleteComment(ctx, id); err != nil {
-		log.Println(err)
+		s.logger.ErrorContext(ctx, "failed to delete comment", slog.Any("error", err))
 		return fmt.Errorf("failed to delete comment: %w", err)
 	}
 	return nil

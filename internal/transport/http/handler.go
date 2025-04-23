@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,11 +23,13 @@ type Handler struct {
 	Router  *mux.Router
 	Service CommentService
 	Server  *http.Server
+	logger  *slog.Logger
 }
 
-func NewHandler(service CommentService) *Handler {
+func NewHandler(service CommentService, logger *slog.Logger) *Handler {
 	h := &Handler{
 		Service: service,
+		logger:  logger,
 	}
 
 	h.Router = mux.NewRouter()
@@ -35,9 +37,9 @@ func NewHandler(service CommentService) *Handler {
 	h.mapRoutes()
 
 	h.Router.Use(
-		LoggingMiddleware,
-		JSONMiddleware,
-		TimeoutMiddleware,
+		h.LoggingMiddleware,
+		h.JSONMiddleware,
+		h.TimeoutMiddleware,
 	)
 
 	h.Server = &http.Server{
@@ -53,16 +55,16 @@ func NewHandler(service CommentService) *Handler {
 }
 
 func (h *Handler) mapRoutes() {
-	h.Router.HandleFunc("/api/v1/comments", JWTAuth(h.PostComment)).Methods(http.MethodPost)
-	h.Router.HandleFunc("/api/v1/comments/{id}", JWTAuth(h.UpdateComment)).Methods(http.MethodPut)
-	h.Router.HandleFunc("/api/v1/comments/{id}", JWTAuth(h.DeleteComment)).Methods(http.MethodDelete)
+	h.Router.HandleFunc("/api/v1/comments", h.JWTAuth(h.PostComment)).Methods(http.MethodPost)
+	h.Router.HandleFunc("/api/v1/comments/{id}", h.JWTAuth(h.UpdateComment)).Methods(http.MethodPut)
+	h.Router.HandleFunc("/api/v1/comments/{id}", h.JWTAuth(h.DeleteComment)).Methods(http.MethodDelete)
 	h.Router.HandleFunc("/api/v1/comments/{id}", h.GetComment).Methods(http.MethodGet)
 }
 
 func (h *Handler) Serve() error {
 	go func() {
 		if err := h.Server.ListenAndServe(); err != nil {
-			log.Printf("failed to start server: %v", err)
+			h.logger.Error("failed to start server", slog.Any("error", err))
 		}
 	}()
 
@@ -76,7 +78,7 @@ func (h *Handler) Serve() error {
 		return fmt.Errorf("failed to shutdown server: %w", err)
 	}
 
-	log.Println("Server shutdown gracefully")
+	h.logger.Info("server shutdown gracefully")
 
 	return nil
 }

@@ -2,26 +2,25 @@ package http
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 )
 
-func JSONMiddleware(next http.Handler) http.Handler {
+func (h *Handler) JSONMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
 }
 
-func LoggingMiddleware(next http.Handler) http.Handler {
+func (h *Handler) LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Received request: %s %s", r.Method, r.URL.Path)
+		h.logger.InfoContext(r.Context(), "Received request", "method", r.Method, "path", r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }
 
-func TimeoutMiddleware(next http.Handler) http.Handler {
+func (h *Handler) TimeoutMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), requestTimeout*time.Second)
 		defer cancel()

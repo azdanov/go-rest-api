@@ -3,14 +3,13 @@ package db
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 )
 
 func (db *Database) Migrate() error {
-	log.Println("migrating database...")
+	db.logger.Info("migrating database...")
 
 	d, err := postgres.WithInstance(db.Client.DB, &postgres.Config{})
 	if err != nil {
@@ -24,7 +23,7 @@ func (db *Database) Migrate() error {
 
 	if err = m.Up(); err != nil {
 		if errors.Is(err, migrate.ErrNoChange) {
-			log.Println("no new migrations to apply")
+			db.logger.Info("no new migrations to apply")
 			return nil
 		}
 		return fmt.Errorf("failed to apply migrations: %w", err)

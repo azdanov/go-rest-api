@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/jmoiron/sqlx"
@@ -10,9 +11,10 @@ import (
 
 type Database struct {
 	Client *sqlx.DB
+	logger *slog.Logger
 }
 
-func NewDatabase() (*Database, error) {
+func NewDatabase(logger *slog.Logger) (*Database, error) {
 	connectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("DB_HOST"),
@@ -30,6 +32,7 @@ func NewDatabase() (*Database, error) {
 
 	return &Database{
 		Client: db,
+		logger: logger,
 	}, nil
 }
 
