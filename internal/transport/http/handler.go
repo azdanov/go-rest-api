@@ -14,7 +14,8 @@ import (
 
 const (
 	addr            = "0.0.0.0:8080"
-	handlerTimeout  = 3
+	requestTimeout  = 10
+	serverTimeout   = 15
 	shutdownTimeout = 15
 )
 
@@ -30,13 +31,20 @@ func NewHandler(service CommentService) *Handler {
 	}
 
 	h.Router = mux.NewRouter()
+
 	h.mapRoutes()
 
+	h.Router.Use(
+		LoggingMiddleware,
+		JSONMiddleware,
+		TimeoutMiddleware,
+	)
+
 	h.Server = &http.Server{
-		IdleTimeout:       handlerTimeout * time.Second,
-		WriteTimeout:      handlerTimeout * time.Second,
-		ReadHeaderTimeout: handlerTimeout * time.Second,
-		ReadTimeout:       handlerTimeout * time.Second,
+		IdleTimeout:       serverTimeout * time.Second,
+		WriteTimeout:      serverTimeout * time.Second,
+		ReadHeaderTimeout: serverTimeout * time.Second,
+		ReadTimeout:       serverTimeout * time.Second,
 		Addr:              addr,
 		Handler:           h.Router,
 	}
