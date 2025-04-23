@@ -53,10 +53,10 @@ func NewHandler(service CommentService) *Handler {
 }
 
 func (h *Handler) mapRoutes() {
-	h.Router.HandleFunc("/api/v1/comments", h.PostComment).Methods(http.MethodPost)
+	h.Router.HandleFunc("/api/v1/comments", JWTAuth(h.PostComment)).Methods(http.MethodPost)
+	h.Router.HandleFunc("/api/v1/comments/{id}", JWTAuth(h.UpdateComment)).Methods(http.MethodPut)
+	h.Router.HandleFunc("/api/v1/comments/{id}", JWTAuth(h.DeleteComment)).Methods(http.MethodDelete)
 	h.Router.HandleFunc("/api/v1/comments/{id}", h.GetComment).Methods(http.MethodGet)
-	h.Router.HandleFunc("/api/v1/comments/{id}", h.UpdateComment).Methods(http.MethodPut)
-	h.Router.HandleFunc("/api/v1/comments/{id}", h.DeleteComment).Methods(http.MethodDelete)
 }
 
 func (h *Handler) Serve() error {
