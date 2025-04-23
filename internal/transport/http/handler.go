@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
@@ -20,16 +21,18 @@ const (
 )
 
 type Handler struct {
-	Router  *mux.Router
-	Service CommentService
-	Server  *http.Server
-	logger  *slog.Logger
+	Router    *mux.Router
+	Service   CommentService
+	Server    *http.Server
+	logger    *slog.Logger
+	validator *validator.Validate
 }
 
 func NewHandler(service CommentService, logger *slog.Logger) *Handler {
 	h := &Handler{
-		Service: service,
-		logger:  logger,
+		Service:   service,
+		logger:    logger,
+		validator: validator.New(validator.WithRequiredStructEnabled()),
 	}
 
 	h.Router = mux.NewRouter()

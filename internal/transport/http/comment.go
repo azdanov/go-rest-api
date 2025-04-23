@@ -17,14 +17,35 @@ type CommentService interface {
 	DeleteComment(context.Context, string) error
 }
 
+type PostCommentRequest struct {
+	Slug   string `json:"slug"   validate:"required"`
+	Body   string `json:"body"   validate:"required"`
+	Author string `json:"author" validate:"required"`
+}
+
+func convertToComment(pcr PostCommentRequest) comment.Comment {
+	return comment.Comment{
+		Slug:   pcr.Slug,
+		Body:   pcr.Body,
+		Author: pcr.Author,
+	}
+}
+
 func (h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
-	var comment comment.Comment
-	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
+	var pcr PostCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&pcr); err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to decode request body", slog.Any("error", err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	if err := h.validator.Struct(pcr); err != nil {
+		h.logger.ErrorContext(r.Context(), "validation failed", slog.Any("error", err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	comment := convertToComment(pcr)
 	comment, err := h.Service.CreateComment(r.Context(), comment)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to create comment", slog.Any("error", err))
@@ -61,6 +82,22 @@ func (h *Handler) GetComment(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type UpdateCommentRequest struct {
+	ID     string `json:"id"     validate:"required,uuid"`
+	Slug   string `json:"slug"   validate:"required"`
+	Body   string `json:"body"   validate:"required"`
+	Author string `json:"author" validate:"required"`
+}
+
+func convertToUpdateComment(ucr UpdateCommentRequest) comment.Comment {
+	return comment.Comment{
+		ID:     ucr.ID,
+		Slug:   ucr.Slug,
+		Body:   ucr.Body,
+		Author: ucr.Author,
+	}
+}
+
 func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	commentID := vars["id"]
@@ -69,17 +106,25 @@ func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var comment comment.Comment
-	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
+	var ucr UpdateCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&ucr); err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to decode request body", slog.Any("error", err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if comment.ID != commentID {
+	if ucr.ID != commentID {
 		http.Error(w, "comment ID in URL and body must match", http.StatusBadRequest)
 		return
 	}
+
+	if err := h.validator.Struct(ucr); err != nil {
+		h.logger.ErrorContext(r.Context(), "validation failed", slog.Any("error", err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	comment := convertToUpdateComment(ucr)
 
 	if err := h.Service.UpdateComment(r.Context(), comment); err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to update comment", slog.Any("error", err))
