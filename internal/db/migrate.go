@@ -8,7 +8,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 )
 
-func (db *Database) Migrate() error {
+func (db *Database) Migrate(path string) error {
 	db.logger.Info("migrating database...")
 
 	d, err := postgres.WithInstance(db.Client.DB, &postgres.Config{})
@@ -16,7 +16,7 @@ func (db *Database) Migrate() error {
 		return fmt.Errorf("failed to create postgres driver: %w", err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://./migrations", "postgres", d)
+	m, err := migrate.NewWithDatabaseInstance("file://"+path, "postgres", d)
 	if err != nil {
 		return fmt.Errorf("failed to create new migration instance: %w", err)
 	}

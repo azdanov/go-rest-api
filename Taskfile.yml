@@ -9,6 +9,9 @@ tasks:
   test:
     cmds:
       - go test -v ./...
+  integration:
+    cmds:
+      - go test -v -tags=integration ./...
   lint:
     cmds:
       - golangci-lint run ./...

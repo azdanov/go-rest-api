@@ -14,11 +14,11 @@ import (
 func Run(logger *slog.Logger) error {
 	logger.Info("starting server")
 
-	db, err := db.NewDatabase(logger)
+	db, err := db.NewDatabase(logger, db.CreateConnectionString())
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
-	if err = db.Migrate(); err != nil {
+	if err = db.Migrate("./migrations"); err != nil {
 		return err
 	}
 

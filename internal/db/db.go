@@ -14,8 +14,8 @@ type Database struct {
 	logger *slog.Logger
 }
 
-func NewDatabase(logger *slog.Logger) (*Database, error) {
-	connectionString := fmt.Sprintf(
+func CreateConnectionString() string {
+	return fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
@@ -24,8 +24,10 @@ func NewDatabase(logger *slog.Logger) (*Database, error) {
 		os.Getenv("DB_NAME"),
 		os.Getenv("DB_SSL_MODE"),
 	)
+}
 
-	db, err := sqlx.Connect("postgres", connectionString)
+func NewDatabase(logger *slog.Logger, connStr string) (*Database, error) {
+	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
 		return &Database{}, fmt.Errorf("failed to connect to database: %w", err)
 	}
