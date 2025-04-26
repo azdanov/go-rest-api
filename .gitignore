@@ -33,4 +33,8 @@ tmp/
 # Jetbrains
 .idea/
 
+# Task
+.task/
+
+# App
 images/

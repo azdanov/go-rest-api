@@ -1,3 +1,6 @@
+//go:build unit
+// +build unit
+
 package comment_test
 
 import (
