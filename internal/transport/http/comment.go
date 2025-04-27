@@ -3,10 +3,12 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/azdanov/go-rest-api/internal/comment"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -53,6 +55,8 @@ func (h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Location", "/api/v1/comments/"+comment.ID)
+	w.WriteHeader(http.StatusCreated)
 	if err = json.NewEncoder(w).Encode(comment); err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to encode response", slog.Any("error", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -68,14 +72,24 @@ func (h *Handler) GetComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comment, err := h.Service.GetComment(r.Context(), commentID)
-	if err != nil {
-		h.logger.ErrorContext(r.Context(), "failed to get comment", slog.Any("error", err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if _, err := uuid.Parse(commentID); err != nil {
+		h.logger.ErrorContext(r.Context(), "invalid comment ID format", slog.Any("error", err))
+		http.Error(w, "invalid comment ID format", http.StatusBadRequest)
 		return
 	}
 
-	if err = json.NewEncoder(w).Encode(comment); err != nil {
+	cmt, err := h.Service.GetComment(r.Context(), commentID)
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "failed to get comment", slog.Any("error", err))
+		if errors.Is(err, comment.ErrCommentNotFound) {
+			http.Error(w, "comment not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if err = json.NewEncoder(w).Encode(cmt); err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to encode response", slog.Any("error", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -103,6 +117,12 @@ func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	commentID := vars["id"]
 	if commentID == "" {
 		http.Error(w, "comment ID is required", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := uuid.Parse(commentID); err != nil {
+		h.logger.ErrorContext(r.Context(), "invalid comment ID format", slog.Any("error", err))
+		http.Error(w, "invalid comment ID format", http.StatusBadRequest)
 		return
 	}
 
